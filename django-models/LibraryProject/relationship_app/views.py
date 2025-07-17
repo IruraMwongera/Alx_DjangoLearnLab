@@ -2,8 +2,9 @@ from django.shortcuts import render
 from .models import Book
 
 def list_books(request):
-    books = Book.objects.select_related('author').all()
-    return render(request, 'list_books.html', {'books': books})
+    books = Book.objects.all()  # ✅ Must match exactly
+    return render(request, 'relationship_app/list_books.html', {'books': books})  # ✅ Must match exactly
+
 
 
 # Class-Based View: Library Detail View
