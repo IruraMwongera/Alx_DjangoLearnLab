@@ -19,6 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('bookshelf.urls')),  # ← Include bookshelf URLs
-    path('', include('relationship_app.urls')),  # This links your app's URLs
+    path('', include('relationship_app.urls')),  # handles '/', '/login/', etc.
+    path('bookshelf/', include('bookshelf.urls')),
 ]
