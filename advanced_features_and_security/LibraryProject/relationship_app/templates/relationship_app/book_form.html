@@ -1,0 +1,7 @@
+<h2>{{ action }} Book</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">{{ action }}</button>
+</form>
+<a href="{% url 'list_books' %}">Back to List</a>
