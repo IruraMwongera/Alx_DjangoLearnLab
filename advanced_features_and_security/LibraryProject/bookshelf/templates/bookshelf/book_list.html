@@ -1,0 +1,38 @@
+<!-- bookshelf/templates/bookshelf/book_list.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book List</title>
+</head>
+<body>
+    <h1>All Books</h1>
+
+    <table border="1" cellpadding="5">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Publication Year</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+                <tr>
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.author }}</td>
+                    <td>{{ book.publication_year }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No books found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <a href="{% url 'add_book' %}">Add New Book</a>
+</body>
+</html>

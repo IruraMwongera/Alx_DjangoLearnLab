@@ -1,30 +1,18 @@
-\# School Management System — Role-Based Access (RBAC)
+# 🔐 Security Testing Checklist
 
+## ✅ CSRF Protection
+- Confirm CSRF tokens are required for all form submissions.
+- Try submitting a form without a CSRF token → Should fail with 403 Forbidden.
 
+## ✅ XSS (Cross-Site Scripting) Protection
+- Enter this in input field: `<script>alert('XSS')</script>`
+- Result: Should appear as plain text, **not** as a script popup.
 
-\## 👥 User Roles (Groups)
+## ✅ SQL Injection Protection
+- Use any search or text field.
+- Input: `1' OR 1=1`
+- Result: Should not break query logic or expose data.
 
-\- \*\*Admin\*\*: Full access to manage users and data.
-
-\- \*\*Teacher\*\*: Can view, create, and edit subjects.
-
-\- \*\*Student\*\*: Can view subjects and grades.
-
-\- \*\*Parent\*\*: Can view student's performance.
-
-
-
-\## 🔐 Permissions
-
-Custom permissions defined on the `Subject` model:
-
-\- `can\_view`: View subject info
-
-\- `can\_create`: Add new subjects
-
-\- `can\_edit`: Edit subjects
-
-\- `can\_delete`: Delete subjects
-
-
-
+## ✅ Clickjacking Protection
+- Open browser developer tools > Network > check headers.
+- Confirm this header exists:
