@@ -4,8 +4,7 @@ from django.contrib.auth.decorators import permission_required
 from django.views.generic.detail import DetailView
 
 from .models import Book, Library
-from .forms import BookForm
-
+from .forms import BookForm, ExampleForm  # ✅ Add ExampleForm
 
 def set_csp_headers(response):
     """
@@ -14,13 +13,11 @@ def set_csp_headers(response):
     response['Content-Security-Policy'] = "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self';"
     return response
 
-
 @permission_required('bookshelf.view_book', raise_exception=True)
 def book_list(request):
     books = Book.objects.all()
     response = render(request, 'bookshelf/list_books.html', {'books': books})
     return set_csp_headers(response)
-
 
 @permission_required('bookshelf.add_book', raise_exception=True)
 def add_book(request):
@@ -33,7 +30,6 @@ def add_book(request):
         form = BookForm()
     response = render(request, 'bookshelf/form_example.html', {'form': form})
     return set_csp_headers(response)
-
 
 class LibraryDetailView(DetailView):
     model = Library
