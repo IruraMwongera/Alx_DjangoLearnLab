@@ -37,10 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bookshelf',
+    'bookshelf.apps.BookshelfConfig',
+
 ]
 # Add this below INSTALLED_APPS
 AUTH_USER_MODEL = 'bookshelf.CustomUser'
+
 
 
 

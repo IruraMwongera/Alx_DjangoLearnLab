@@ -1,9 +1,10 @@
-# school/admin.py
-
 from django.contrib import admin
-from .models import Subject
+from .models import CustomUser, Author, Book, Library, Librarian, UserProfile
+from django.contrib.auth.admin import UserAdmin
 
-@admin.register(Subject)
-class SubjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'teacher')
-
+admin.site.register(CustomUser, UserAdmin)
+admin.site.register(Author)
+admin.site.register(Book)
+admin.site.register(Library)
+admin.site.register(Librarian)
+admin.site.register(UserProfile)
