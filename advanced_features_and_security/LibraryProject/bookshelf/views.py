@@ -4,7 +4,8 @@ from django.contrib.auth.decorators import permission_required
 from django.views.generic.detail import DetailView
 
 from .models import Book, Library
-from .forms import BookForm, ExampleForm  # ✅ Add ExampleForm
+from .forms import ExampleForm
+from .forms import BookForm
 
 def set_csp_headers(response):
     """
