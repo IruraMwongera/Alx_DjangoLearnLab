@@ -1,51 +1,37 @@
+# school/views.py
+
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth import login
-from django.views.generic.detail import DetailView
-from .models import Book, Library
+from .models import Subject
 
+@login_required
+@permission_required('school.can_view', raise_exception=True)
+def subject_list(request):
+    subjects = Subject.objects.all()
+    return render(request, 'subject_list.html', {'subjects': subjects})
 
-# Existing ones
-def list_books(request):
-    books = Book.objects.all()
-    return render(request, 'bookshelf/list_books.html', {'books': books})
-
-def add_book(request):
-    return render(request, 'bookshelf/add_book.html')  # Or use HttpResponse as before
-
-
-# ✅ New required views
-def register(request):
+@login_required
+@permission_required('school.can_create', raise_exception=True)
+def create_subject(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('home')  # Or wherever you want
-    else:
-        form = UserCreationForm()
-    return render(request, 'bookshelf/register.html', {'form': form})
+        name = request.POST['name']
+        Subject.objects.create(name=name, teacher=request.user)
+        return redirect('subject_list')
+    return render(request, 'create_subject.html')
 
+@login_required
+@permission_required('school.can_edit', raise_exception=True)
+def edit_subject(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    if request.method == 'POST':
+        subject.name = request.POST['name']
+        subject.save()
+        return redirect('subject_list')
+    return render(request, 'edit_subject.html', {'subject': subject})
 
-def admin_view(request):
-    return render(request, 'bookshelf/admin_view.html')
-
-def librarian_view(request):
-    return render(request, 'bookshelf/librarian_view.html')
-
-def member_view(request):
-    return render(request, 'bookshelf/member_view.html')
-
-def edit_book(request, pk):
-    book = get_object_or_404(Book, pk=pk)
-    return render(request, 'bookshelf/edit_book.html', {'book': book})
-
-def delete_book(request, pk):
-    book = get_object_or_404(Book, pk=pk)
-    return render(request, 'bookshelf/delete_book.html', {'book': book})
-
-
-class LibraryDetailView(DetailView):
-    model = Library
-    template_name = 'bookshelf/library_detail.html'
+@login_required
+@permission_required('school.can_delete', raise_exception=True)
+def delete_subject(request, pk):
+    subject = get_object_or_404(Subject, pk=pk)
+    subject.delete()
+    return redirect('subject_list')
