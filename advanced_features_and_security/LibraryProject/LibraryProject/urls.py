@@ -19,7 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('relationship_app.urls')),     # All views: home, books, add_book, login, etc.
     path('bookshelf/', include('bookshelf.urls')),  # If you're using another app
 ]
 
