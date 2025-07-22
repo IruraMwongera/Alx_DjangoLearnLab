@@ -5,12 +5,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'your-secret-key-here'
+SECRET_KEY = 'your-secret-key-here'  # Replace with a strong secret in production
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # Prevents display of sensitive error info in production
+DEBUG = False  # Set to True only in development
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'yourdomain.com']  # Set proper hosts
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'yourdomain.com']  # Add production domain/IP here
 
 # Application definition
 INSTALLED_APPS = [
@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     'bookshelf',  # Your app
 ]
 
-# ✅ Set the custom user model here
+# Custom user model
 AUTH_USER_MODEL = 'bookshelf.CustomUser'
 
 MIDDLEWARE = [
@@ -41,7 +41,7 @@ ROOT_URLCONF = 'LibraryProject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Optional: your custom templates
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Optional but useful
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,19 +74,26 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'  # Or your preferred timezone
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# Static files
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collectstatic in production
 
-# Secure settings for production
-SECURE_BROWSER_XSS_FILTER = True  # Activates XSS filter in browsers
-SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevents browsers from MIME type sniffing
-X_FRAME_OPTIONS = 'DENY'  # Prevents clickjacking by blocking iframe embedding
-CSRF_COOKIE_SECURE = True  # CSRF cookie only sent via HTTPS
-SESSION_COOKIE_SECURE = True  # Session cookie only sent via HTTPS
+# Media files (if needed)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Secure production settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
