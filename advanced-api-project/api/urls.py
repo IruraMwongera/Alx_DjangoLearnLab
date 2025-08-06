@@ -5,9 +5,10 @@ from .views import (
 )
 
 urlpatterns = [
-    path('books/', BookListView.as_view(), name='book-list'),
-    path('books/<int:pk>/', BookDetailView.as_view(), name='book-detail'),
-    path('books/create/', BookCreateView.as_view(), name='book-create'),
-    path('books/update/<int:pk>/', BookUpdateView.as_view(), name='book-update'),  # moved <int:pk>
-    path('books/delete/<int:pk>/', BookDeleteView.as_view(), name='book-delete'),  # moved <int:pk>
+    path('books/', BookListView.as_view(), name='book-list'),                    # Supports ?search=, ?ordering=, ?title=
+    path('books/<int:pk>/', BookDetailView.as_view(), name='book-detail'),      # GET single book
+    path('books/create/', BookCreateView.as_view(), name='book-create'),        # POST to create
+    path('books/<int:pk>/update/', BookUpdateView.as_view(), name='book-update'), # PUT/PATCH to update
+    path('books/<int:pk>/delete/', BookDeleteView.as_view(), name='book-delete'), # DELETE to delete
 ]
+
