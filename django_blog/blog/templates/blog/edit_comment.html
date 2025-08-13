@@ -1,0 +1,7 @@
+{% extends "blog/base.html" %}
+<h3>Edit Comment</h3>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Update</button>
+</form>
