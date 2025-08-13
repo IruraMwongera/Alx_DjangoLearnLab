@@ -3,18 +3,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import render, redirect
 from .models import Post
-
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 
+# -----------------------------
+# Login & Logout Views
+# -----------------------------
 class BlogLoginView(LoginView):
     template_name = 'registration/login.html'
 
 class BlogLogoutView(LogoutView):
     template_name = 'registration/logged_out.html'
 
+# -----------------------------
+# User Registration
+# -----------------------------
 def register(request):
     if request.user.is_authenticated:
-        return redirect('profile')
+        return redirect('profile')  # Already logged in
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
@@ -25,14 +30,14 @@ def register(request):
         form = UserRegisterForm()
     return render(request, 'blog/register.html', {'form': form})
 
-
+# -----------------------------
+# Profile Management
+# -----------------------------
 @login_required
 def profile(request):
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileUpdateForm(
-            request.POST, request.FILES, instance=request.user.profile
-        )
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
@@ -45,9 +50,10 @@ def profile(request):
     context = {'u_form': u_form, 'p_form': p_form}
     return render(request, 'blog/profile.html', context)
 
-def post_list(request):
-    return render(request, 'blog/post_list.html')
-
+# -----------------------------
+# Blog Posts List
+# -----------------------------
+@login_required
 def post_list(request):
     posts = Post.objects.all()
     return render(request, 'blog/post_list.html', {'posts': posts})
