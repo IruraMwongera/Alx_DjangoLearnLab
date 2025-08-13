@@ -9,10 +9,10 @@ from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 # Login & Logout Views
 # -----------------------------
 class BlogLoginView(LoginView):
-    template_name = 'registration/login.html'
+    template_name = 'blog/login.html'
 
 class BlogLogoutView(LogoutView):
-    template_name = 'registration/logged_out.html'
+    template_name = 'blog/logged_out.html'
 
 # -----------------------------
 # User Registration
