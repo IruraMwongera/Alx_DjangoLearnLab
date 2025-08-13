@@ -67,7 +67,7 @@ TEMPLATES = [
     },
 ]
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'profile'      # after successful login
+LOGIN_REDIRECT_URL = 'post-list'     # after successful login
 LOGOUT_REDIRECT_URL = 'login'       # after logout
 
 # for profile images (optional)
