@@ -10,6 +10,8 @@ from django.db.models import Q
 from taggit.models import Tag
 from .models import Post, Comment
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm, CommentForm
+from django.views.generic import ListView
+from .models import Post
 
 # -----------------------------
 # Home View - Redirect Logic
@@ -173,3 +175,13 @@ def posts_by_tag(request, tag_slug):
     tag = Tag.objects.get(slug=tag_slug)
     posts = Post.objects.filter(tags__slug=tag_slug)
     return render(request, 'blog/tag_posts.html', {'posts': posts, 'tag': tag})
+
+class PostByTagListView(ListView):
+    model = Post
+    template_name = 'blog/tag_posts.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        tag_slug = self.kwargs.get('tag_slug')
+        return Post.objects.filter(tags__slug=tag_slug)
+
