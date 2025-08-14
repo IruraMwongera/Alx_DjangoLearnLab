@@ -12,24 +12,31 @@ from .views import (
     PostDeleteView,
     CommentCreateView,
     CommentUpdateView,
+    CommentDeleteView,
 )
 
 urlpatterns = [
     # Post URLs
-    path('posts/', views.PostListView.as_view(), name='post-list'),
-    path('post/<int:pk>/', views.PostDetailView.as_view(), name='post-detail'),
-    path('post/new/', views.PostCreateView.as_view(), name='post-create'),
-    path('post/<int:pk>/update/', views.PostUpdateView.as_view(), name='post-update'),
-    path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post-delete'),
+    path('posts/', PostListView.as_view(), name='post-list'),
+    path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
+    path('post/new/', PostCreateView.as_view(), name='post-create'),
+    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
+    path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
 
-    # Comment URLs (match exactly what checker expects)
-    path('post/<int:pk>/comments/new/', views.CommentCreateView.as_view(), name='comment-create'),
-    path('comment/<int:pk>/update/', views.CommentUpdateView.as_view(), name='comment-update'),
-    path('comment/<int:pk>/delete/', views.CommentDeleteView.as_view(), name='comment-delete'),
+    # Comment URLs
+    path('post/<int:pk>/comments/new/', CommentCreateView.as_view(), name='comment-create'),
+    path('comment/<int:pk>/update/', CommentUpdateView.as_view(), name='comment-update'),
+    path('comment/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
+
+    # Tag URLs
+    path('tags/<slug:tag_slug>/', views.posts_by_tag, name='posts-by-tag'),
+
+    # Search URL
+    path('search/', views.search_posts, name='search-posts'),
 
     # Auth & Profile
-    path('register/', views.register, name='register'),
-    path('profile/', views.profile, name='profile'),
-    path('login/', views.BlogLoginView.as_view(), name='login'),
-    path('logout/', views.BlogLogoutView.as_view(), name='logout'),
+    path('register/', register, name='register'),
+    path('profile/', profile, name='profile'),
+    path('login/', BlogLoginView.as_view(), name='login'),
+    path('logout/', BlogLogoutView.as_view(), name='logout'),
 ]

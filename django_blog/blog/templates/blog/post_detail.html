@@ -3,6 +3,16 @@
 {% block content %}
 <h2>{{ post.title }}</h2>
 <p>{{ post.content }}</p>
+
+<!-- Tags Section -->
+<p>Tags: 
+    {% for tag in post.tags.all %}
+        <a href="{% url 'posts-by-tag' tag.slug %}">{{ tag.name }}</a>{% if not forloop.last %}, {% endif %}
+    {% empty %}
+        No tags
+    {% endfor %}
+</p>
+
 <p>
     Author: {{ post.author.username }} | 
     Posted: {{ post.published_date|date:"M d, Y" }}
@@ -28,8 +38,8 @@
 
                 {% if user == comment.author %}
                     <div class="mt-1">
-                        <a href="{% url 'edit-comment' comment.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
-                        <a href="{% url 'delete-comment' comment.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                        <a href="{% url 'comment-update' comment.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
+                        <a href="{% url 'comment-delete' comment.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
                     </div>
                 {% endif %}
             </div>
@@ -43,9 +53,9 @@
 
 {% if user.is_authenticated %}
     <h5>Leave a Comment</h5>
-    <form method="post">
+    <form method="post" action="{% url 'comment-create' post.pk %}">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ comment_form.as_p }}
         <button type="submit" class="btn btn-primary">Post Comment</button>
     </form>
 {% else %}

@@ -1,0 +1,20 @@
+{% extends "blog/base.html" %}
+
+{% block content %}
+<h2>Search Results for "{{ query }}"</h2>
+
+{% if posts %}
+    <ul>
+        {% for post in posts %}
+            <li>
+                <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a>
+                - {{ post.published_date|date:"M d, Y" }}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No posts found matching your query.</p>
+{% endif %}
+
+<a href="{% url 'post-list' %}">Back to all posts</a>
+{% endblock %}

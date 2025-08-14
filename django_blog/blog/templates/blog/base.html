@@ -13,10 +13,17 @@
             <ul>
                 <li><a href="{% url 'home' %}">Home</a></li>
                 <li><a href="{% url 'post-list' %}">Blog Posts</a></li>
-                
+
+                <!-- Search Form -->
+                <li>
+                    <form method="GET" action="{% url 'search-posts' %}" style="display:inline;">
+                        <input type="text" name="q" placeholder="Search posts..." required>
+                        <button type="submit">Search</button>
+                    </form>
+                </li>
+
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'profile' %}">Profile</a></li>
-                    
                     <li>
                         <form action="{% url 'logout' %}" method="post" style="display:inline;">
                             {% csrf_token %}
