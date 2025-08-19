@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import pymysql
 pymysql.install_as_MySQLdb()
-
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,9 +43,12 @@ INSTALLED_APPS = [
       # Third-party
     'rest_framework',
     'rest_framework.authtoken',
+    
 
     # Local
     'accounts',
+    'posts',
+    'widget_tweaks',
 ]
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -70,9 +73,8 @@ ROOT_URLCONF = 'social_media_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # Optional project-level templates folder
-        'DIRS': [],  
-        'APP_DIRS': True,  # Django will look inside each app's templates folder
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # <-- global templates folder
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -83,7 +85,6 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'social_media_api.wsgi.application'
 
 
@@ -135,7 +136,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+import os
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

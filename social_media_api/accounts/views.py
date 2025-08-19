@@ -1,70 +1,92 @@
-# accounts/views.py
-from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import LoginView, LogoutView
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.views import APIView
-from django.contrib.auth import get_user_model, authenticate
-from rest_framework.authtoken.models import Token
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.db.models import Q
+from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
+from django.views.generic import ListView
+from .forms import ProfileUpdateForm
+from posts.forms import PostForm
+# -----------------------------
+# Home View - Redirect Logic
+# -----------------------------
+def home(request):
+    if request.user:
+        return redirect('post-list')
 
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+# -----------------------------
+# Login & Logout Views
+# -----------------------------
+class accountsLoginView(LoginView):
+    template_name = 'accounts/login.html'
 
-User = get_user_model()
+class accountsLogoutView(LogoutView):
+    template_name = 'accounts/logged_out.html'
+    next_page = reverse_lazy('login')
+
+# -----------------------------
+# User Registration
+# -----------------------------
+def register(request):
+    if request.user.is_authenticated:
+        return redirect('post-list')
+
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account was created. You can now log in.')
+            return redirect('login')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'accounts/register.html', {'form': form})
+
+# -----------------------------
+# Profile Management
+# -----------------------------
+@login_required
+def profile(request):
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)  # fixed
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, 'Profile updated!')
+            return redirect('profile')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user)
+
+    return render(request, 'accounts/profile.html', {'u_form': u_form, 'p_form': p_form})
+
+@login_required
+def profile_view(request):
+    profile_form = ProfileUpdateForm(instance=request.user)
+    post_form = PostForm()
+
+    if request.method == "POST":
+        if "update_profile" in request.POST:
+            profile_form = ProfileUpdateForm(request.POST, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                return redirect("profile")
+
+        elif "create_post" in request.POST:
+            post_form = PostForm(request.POST, request.FILES)
+            if post_form.is_valid():
+                post = post_form.save(commit=False)
+                post.author = request.user
+                post.save()
+                return redirect("profile")
+
+    return render(request, "accounts/profile.html", {
+        "form": profile_form,
+        "post_form": post_form
+    })
 
 
-# ------------------------------
-# Register View
-# ------------------------------
-class RegisterView(generics.CreateAPIView):
-    serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        token = Token.objects.get(user=user)  # DRF Token
-
-        # Handle HTML form submission
-        if request.content_type == "application/x-www-form-urlencoded":
-            return redirect(reverse_lazy("login"))
-
-        # JSON/API response
-        return Response({
-            "user": UserSerializer(user).data,
-            "token": token.key
-        })
-
-
-# ------------------------------
-# Login View
-# ------------------------------
-class LoginView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data
-        token, created = Token.objects.get_or_create(user=user)
-
-        # Handle HTML form submission
-        if request.content_type == "application/x-www-form-urlencoded":
-            return redirect(reverse_lazy("profile"))
-
-        return Response({
-            "user": UserSerializer(user).data,
-            "token": token.key
-        })
-
-
-# ------------------------------
-# Profile View
-# ------------------------------
-class ProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user

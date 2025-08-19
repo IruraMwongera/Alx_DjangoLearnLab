@@ -1,4 +1,4 @@
 from django.shortcuts import render
 
-def index(request):
-    return render(request, "index.html")
+def home(request):
+    return render(request, "base.html")  # or create a dedicated home.html extending base.html

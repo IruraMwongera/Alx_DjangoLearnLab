@@ -16,17 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import redirect
-
-# Redirect root URL to login page
-def root_redirect(request):
-    return redirect("login")
+from . import views  # import home view
 
 urlpatterns = [
+    path("", views.home, name="home"),   # root url
     path("admin/", admin.site.urls),
-    path("", root_redirect, name="root"),  # / → login
-    path("", include("accounts.urls")),    # include accounts app URLs
+    path("accounts/", include("accounts.urls")),
+    path("posts/", include("posts.urls")),
+    path("api/", include("posts.api_urls")),
+
 ]
+
+
 
 
 
