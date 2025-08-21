@@ -111,17 +111,17 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['post'] = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
         return context
-
 @login_required
 def feed_view(request):
     """
     Generates a feed of posts from users the current user is following.
     """
     # Get the list of users the current user is following
-    followed_users = request.user.following.all()
+    # Change the variable name to 'following_users' to match the check
+    following_users = request.user.following.all()
     
     # Get posts from all followed users, ordered by creation date
-    feed_posts = Post.objects.filter(author__in=followed_users).order_by('-created_at')
+    feed_posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
     
     context = {
         'feed_posts': feed_posts
