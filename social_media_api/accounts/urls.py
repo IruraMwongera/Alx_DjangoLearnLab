@@ -20,8 +20,8 @@ urlpatterns = [
     # -----------------------------------------------------------
     # Follow/Unfollow URLs are also specific due to the 'follow/' prefix
     # -----------------------------------------------------------
-    path('follow/<str:username>/', views.follow_user, name='follow'),
-    path('unfollow/<str:username>/', views.unfollow_user, name='unfollow'),
+    path('follow/<str:username>/', views.FollowUserAPIView.as_view(), name='follow'),
+    path('unfollow/<str:username>/', views.UnfollowUserAPIView.as_view(), name='unfollow'),
 
     # ---------------------------------------------------------------
     # The generic profile URL must come LAST

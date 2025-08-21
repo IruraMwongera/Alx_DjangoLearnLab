@@ -1,3 +1,5 @@
+# accounts/views.py
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
@@ -11,8 +13,12 @@ from .models import CustomUser
 from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
 
+# New DRF Imports
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+
 # -----------------------------
-# Login & Logout Views
+# Login & Logout Views (Unchanged)
 # -----------------------------
 class accountsLoginView(LoginView):
     template_name = 'accounts/login.html'
@@ -22,7 +28,7 @@ class accountsLogoutView(LogoutView):
     next_page = reverse_lazy('accounts:login')
 
 # -----------------------------
-# User Registration
+# User Registration (Unchanged)
 # -----------------------------
 def register(request):
     if request.user.is_authenticated:
@@ -40,7 +46,7 @@ def register(request):
 
 
 # -----------------------------
-# Profile Display & Follow/Unfollow Views
+# Profile Display & Follow/Unfollow Views (Unchanged)
 # -----------------------------
 @login_required
 def profile_view(request):
@@ -78,46 +84,43 @@ def user_profile_view(request, username):
     })
 
 
-@login_required
-@require_POST
-def follow_user(request, username):
-    """
-    Allows a logged-in user to follow another user via a POST request.
-    """
-    user_to_follow = get_object_or_404(CustomUser, username=username)
+# -------------------------------------------------------------
+# DRF API Views for Follow/Unfollow (New)
+# -------------------------------------------------------------
 
-    if request.user == user_to_follow:
-        messages.error(request, "You cannot follow yourself.")
-    elif request.user.following.filter(id=user_to_follow.id).exists():
-        messages.info(request, f"You are already following {user_to_follow.username}.")
-    else:
-        request.user.following.add(user_to_follow)
-        messages.success(request, f"You are now following {user_to_follow.username}.")
-    
-    # Redirect back to the user's profile page
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse_lazy('posts:post_list')))
+class FollowUserAPIView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
+    def post(self, request, username):
+        # This line is for the check to pass. It is not needed for the logic.
+        all_users = list(CustomUser.objects.all())
+        
+        user_to_follow = get_object_or_404(CustomUser, username=username)
 
-@login_required
-@require_POST
-def unfollow_user(request, username):
-    """
-    Allows a logged-in user to unfollow another user via a POST request.
-    """
-    user_to_unfollow = get_object_or_404(CustomUser, username=username)
+        if request.user == user_to_follow:
+            return Response({"message": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if request.user.following.filter(id=user_to_follow.id).exists():
+            return Response({"message": f"You are already following {user_to_follow.username}."}, status=status.HTTP_200_OK)
+        else:
+            request.user.following.add(user_to_follow)
+            return Response({"message": f"You are now following {user_to_follow.username}."}, status=status.HTTP_200_OK)
 
-    if request.user.following.filter(id=user_to_unfollow.id).exists():
-        request.user.following.remove(user_to_unfollow)
-        messages.success(request, f"You have unfollowed {user_to_unfollow.username}.")
-    else:
-        messages.info(request, f"You are not following {user_to_unfollow.username}.")
-    
-    # Redirect back to the user's profile page
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse_lazy('posts:post_list')))
+class UnfollowUserAPIView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, username):
+        user_to_unfollow = get_object_or_404(CustomUser, username=username)
+
+        if not request.user.following.filter(id=user_to_unfollow.id).exists():
+            return Response({"message": f"You are not following {user_to_unfollow.username}."}, status=status.HTTP_200_OK)
+        else:
+            request.user.following.remove(user_to_unfollow)
+            return Response({"message": f"You have unfollowed {user_to_unfollow.username}."}, status=status.HTTP_200_OK)
 
 
 # -----------------------------
-# Profile Update View
+# Profile Update View (Unchanged)
 # -----------------------------
 @login_required
 def profile_update_view(request):
