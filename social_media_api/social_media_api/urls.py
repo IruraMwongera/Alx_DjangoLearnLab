@@ -22,15 +22,14 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Use the `include()` function to add app URLs with a namespace
-    path('accounts/', include(('accounts.urls', 'accounts'), namespace='accounts')),
-    path('', include(('posts.urls', 'posts'), namespace='posts')),
+    # Clean way to include app URLs
+    path('accounts/', include('accounts.urls')),
+    path('', include('posts.urls')),
 
 ]
 
 # This is important for serving user-uploaded media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 
 

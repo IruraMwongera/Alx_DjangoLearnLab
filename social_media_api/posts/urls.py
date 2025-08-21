@@ -13,4 +13,5 @@ urlpatterns = [
     path('post/<int:post_id>/comment/', views.CommentCreateView.as_view(), name='comment_create'),
     # Delete or comment out this line:
     # path('post/search/', views.PostSearchView.as_view(), name='post_search'),
+      path('feed/', views.feed_view, name='feed'),
 ]

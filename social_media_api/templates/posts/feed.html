@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_title %}Your Feed{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Your Feed</h1>
+    <hr>
+    {% if feed_posts %}
+        {% for post in feed_posts %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if post.author.profile_picture %}
+                            <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                                <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}'s profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            </a>
+                        {% else %}
+                            <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                                <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'accounts:user_profile' username=post.author.username %}" class="text-decoration-none text-dark">
+                            <h5 class="card-title mb-0">{{ post.author.username }}</h5>
+                        </a>
+                    </div>
+                    
+                    {% if post.title %}
+                        <h4 class="card-subtitle mb-2">{{ post.title }}</h4>
+                    {% endif %}
+                    
+                    <p class="card-text">{{ post.content }}</p>
+                    
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" alt="Post image">
+                    {% endif %}
+                    
+                    <small class="text-muted">Posted on {{ post.created_at|date:"F j, Y, P" }}</small>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center p-5">
+            <h3 class="text-muted">Your feed is empty.</h3>
+            <p>Follow users to see their posts here!</p>
+            <a href="#" class="btn btn-primary">Discover Users</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

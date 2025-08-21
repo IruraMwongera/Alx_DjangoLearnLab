@@ -4,8 +4,10 @@ from .serializers import PostSerializer, CommentSerializer
 from .forms import PostForm, CommentForm
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.contrib.auth.decorators import login_required
+from .models import Post
 
 
 # DRF API Views (No changes needed here for now)
@@ -109,3 +111,19 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['post'] = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
         return context
+
+@login_required
+def feed_view(request):
+    """
+    Generates a feed of posts from users the current user is following.
+    """
+    # Get the list of users the current user is following
+    followed_users = request.user.following.all()
+    
+    # Get posts from all followed users, ordered by creation date
+    feed_posts = Post.objects.filter(author__in=followed_users).order_by('-created_at')
+    
+    context = {
+        'feed_posts': feed_posts
+    }
+    return render(request, 'posts/feed.html', context)
