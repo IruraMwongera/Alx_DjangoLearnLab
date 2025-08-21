@@ -1,23 +1,98 @@
 {% extends "base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}{{ post.title }}{% endblock %}
+
 {% block content %}
-  <h2>{{ post.title }}</h2>
-  <p>{{ post.content }}</p>
-  <p><small>by {{ post.author }} on {{ post.created_at }}</small></p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex align-items-center">
+                    {% if post.author.profile_picture %}
+                        <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                            <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}'s profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:user_profile' username=post.author.username %}">
 
-  {% if post.author == user %}
-    <a href="{% url 'post_update' post.pk %}">Edit</a> |
-    <a href="{% url 'post_delete' post.pk %}">Delete</a>
-  {% endif %}
+                            <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                        </a>
+                    {% endif %}
+                    
+                    <div>
+                        <a href="{% url 'accounts:user_profile' username=post.author.username %}" class="text-decoration-none text-dark">
+                            <h5 class="mb-0">{{ post.author.username }}</h5>
+                        </a>
+                        <small class="text-muted">{{ post.created_at|date:"F j, Y, P" }}</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h2 class="card-title">{{ post.title }}</h2>
+                    <p class="card-text">{{ post.content|linebreaks }}</p>
+                    
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" alt="Post image">
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-light d-flex justify-content-end">
+                    {% if request.user == post.author %}
+                        <a href="{% url 'posts:post_update' pk=post.pk %}" class="btn btn-sm btn-outline-info me-2">Edit Post</a>
+                        <a href="{% url 'posts:post_delete' pk=post.pk %}" class="btn btn-sm btn-outline-danger">Delete Post</a>
+                    {% endif %}
+                </div>
+            </div>
 
-  <hr>
-  <h3>Comments</h3>
-  <ul>
-    {% for comment in post.comment_set.all %}
-      <li><b>{{ comment.author }}</b>: {{ comment.content }} ({{ comment.created_at }})</li>
-    {% empty %}
-      <li>No comments yet.</li>
-    {% endfor %}
-  </ul>
-
-  <a href="{% url 'comment_create' post.id %}">+ Add Comment</a>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h4>Comments ({{ post.comments.count }})</h4>
+                </div>
+                <div class="card-body">
+                    {% if post.comments %}
+                        <div class="list-group mb-4">
+                            {% for comment in post.comments.all %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            {% if comment.author.profile_picture %}
+                                                <img src="{{ comment.author.profile_picture.url }}" alt="{{ comment.author.username }}'s profile picture" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                            {% else %}
+                                                <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                            {% endif %}
+                                            <a href="{% url 'accounts:user_profile' username=comment.author.username %}" class="h6 mb-1">{{ comment.author.username }}</a>
+                                        </div>
+                                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                    </div>
+                                    <p class="mb-1 mt-2">{{ comment.content }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">No comments yet. Be the first to comment!</p>
+                    {% endif %}
+                    
+                    {% if request.user.is_authenticated %}
+                        <div class="mt-4">
+                            <h5>Leave a comment</h5>
+                            <form method="post" action="{% url 'posts:comment_create' post_id=post.pk %}">
+                                {% csrf_token %}
+                                {{ comment_form|crispy }}
+                                <div class="d-grid gap-2 mt-3">
+                                    <button class="btn btn-primary" type="submit">Submit Comment</button>
+                                </div>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="mt-4 text-center">
+                            <p class="text-muted">You must be logged in to comment.</p>
+                            <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary">Log in to Comment</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

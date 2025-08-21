@@ -1,18 +1,16 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from . import views
-from .views import (
-    accountsLoginView,
-    accountsLogoutView,
-    register,
-    profile,
-    profile_view 
-    )
+
+# This is the crucial line for namespacing
+app_name = 'accounts'
 
 urlpatterns = [
-    # Auth & Profile
-    path('register/', register, name='register'),
-    path('profile/', profile, name='profile'),
-    path('login/', accountsLoginView.as_view(), name='login'),
-    path('logout/', accountsLogoutView.as_view(), name='logout'),
-    path("profile/update/", views.profile_view, name="profile"),
+    path('login/', views.accountsLoginView.as_view(), name='login'),
+    path('logout/', views.accountsLogoutView.as_view(), name='logout'),
+    path('register/', views.register, name='register'),
+    path('profile/', views.profile_view, name='profile'),
+    path('profile/update/', views.profile_update_view, name='profile_update'),
+    path('profile/<str:username>/', views.user_profile_view, name='user_profile'),
 ]
+    

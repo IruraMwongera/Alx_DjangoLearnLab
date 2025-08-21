@@ -42,14 +42,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
       # Third-party
     'rest_framework',
+    'rest_framework_simplejwt', 
     'rest_framework.authtoken',
-    
+    'crispy_forms',           
+    'crispy_bootstrap5', 
 
     # Local
     'accounts',
     'posts',
     'widget_tweaks',
 ]
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -119,8 +124,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -131,6 +134,11 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+# URLs for authentication and redirection
+LOGIN_REDIRECT_URL = 'accounts:profile'
+LOGIN_URL = 'accounts:login'
+LOGOUT_REDIRECT_URL = 'posts:post_list'
 
 
 # Static files (CSS, JavaScript, Images)
@@ -146,3 +154,9 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+# Media Files (User-uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

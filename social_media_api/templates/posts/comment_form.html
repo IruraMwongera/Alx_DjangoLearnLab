@@ -1,12 +1,33 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block head_title %}Comment on Post{% endblock %}
+
 {% block content %}
-  <h1>Add Comment</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h2 class="mb-0">Add a Comment</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <fieldset class="form-group">
+                            <legend class="border-bottom mb-4">On Post: "{{ post.title }}"</legend>
+                            {{ form|crispy }}
+                        </fieldset>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Post Comment</button>
-  </form>
-
-  <a href="{% url 'post_detail' post_id %}">Back to Post</a>
+                        <div class="form-group mt-3">
+                            <button class="btn btn-primary" type="submit">Submit Comment</button>
+                            <a href="{% url 'posts:post_detail' pk=post.pk %}" class="btn btn-secondary ms-2">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

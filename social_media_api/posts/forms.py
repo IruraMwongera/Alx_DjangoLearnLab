@@ -1,21 +1,25 @@
 from django import forms
-from .models import Comment, Post
+from .models import Post, Comment
 
 class PostForm(forms.ModelForm):
+    """
+    Form for creating and updating Post objects.
+    """
     class Meta:
         model = Post
-        fields = ["title", "content", "image"]
-        widgets = {
-            "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "Enter title"}),
-            "content": forms.Textarea(attrs={"class": "form-control", "placeholder": "Write your content here...", "rows": 5}),
-            "image": forms.ClearableFileInput(attrs={"class": "form-control"}),
-        }
+        fields = ['title', 'content', 'image']
 
 
 class CommentForm(forms.ModelForm):
+    """
+    Form for adding a comment to a post.
+    """
     class Meta:
         model = Comment
         fields = ["content"]
+        labels = {
+            'content': 'Comment'
+        }
         widgets = {
-            "content": forms.Textarea(attrs={"class": "form-control", "placeholder": "Add a comment...", "rows": 3}),
+            'content': forms.Textarea(attrs={'rows': 3}),
         }

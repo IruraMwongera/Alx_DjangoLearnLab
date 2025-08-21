@@ -1,6 +1,22 @@
-{% extends 'blog/base.html' %}
-{% block title %}Logged out{% endblock %}
+{% extends "base.html" %}
+
+{% block head_title %}Logged Out{% endblock %}
+
 {% block content %}
-  <h1>You have been logged out.</h1>
-  <p><a href="{% url 'login' %}">Log in again</a></p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white text-center">
+                    <h2 class="mb-0">You Have Been Logged Out</h2>
+                </div>
+                <div class="card-body text-center">
+                    <p class="lead">Thank you for visiting. We hope to see you again soon!</p>
+                    <hr>
+                    <p>You can <a href="{% url 'accounts:login' %}" class="text-decoration-none">log in again</a> here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

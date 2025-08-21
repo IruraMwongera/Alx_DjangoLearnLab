@@ -16,20 +16,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from . import views  # import home view
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
-    path("", views.home, name="home"),   # root url
-    path("admin/", admin.site.urls),
-    path("accounts/", include("accounts.urls")),
-    path("posts/", include("posts.urls")),
-    path("api/", include("posts.api_urls")),
+    path('admin/', admin.site.urls),
+    
+    # Use the `include()` function to add app URLs with a namespace
+    path('accounts/', include(('accounts.urls', 'accounts'), namespace='accounts')),
+    path('', include(('posts.urls', 'posts'), namespace='posts')),
 
 ]
 
-
-
-
+# This is important for serving user-uploaded media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 

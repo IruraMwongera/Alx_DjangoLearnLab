@@ -1,37 +1,83 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Profile{% endblock %}
+{% block head_title %}{{ user_profile.username }}'s Profile{% endblock %}
 
 {% block content %}
-<div class="profile-container">
-    <h2>{{ user.username }}'s Profile</h2>
-    <div class="profile-details">
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>First Name:</strong> {{ user.first_name }}</p>
-        <p><strong>Last Name:</strong> {{ user.last_name }}</p>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% if user_profile.profile_picture %}
+                        <img src="{{ user_profile.profile_picture.url }}" alt="{{ user_profile.username }}'s profile picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% endif %}
+                    
+                    <h5 class="card-title">{{ user_profile.username }}</h5>
+                    <p class="text-muted">{{ user_profile.email }}</p>
+                    
+                    {% if user_profile.first_name and user_profile.last_name %}
+                        <p class="card-text">{{ user_profile.first_name }} {{ user_profile.last_name }}</p>
+                    {% endif %}
+
+                    {% if user_profile.bio %}
+                        <p class="card-text">{{ user_profile.bio }}</p>
+                    {% else %}
+                        <p class="card-text text-muted">No bio available.</p>
+                    {% endif %}
+
+                    {% if request.user == user_profile %}
+                        <a href="{% url 'accounts:profile_update' %}" class="btn btn-primary mt-3">Edit Profile</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>{{ user_profile.username }}'s Posts</h2>
+                </div>
+                <div class="card-body">
+                    {% if user_posts %}
+                        {% for post in user_posts %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if post.author.profile_picture %}
+                                            <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                                                <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}'s profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                                                <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            </a>
+                                        {% endif %}
+                                        
+                                        <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                                            <h5 class="card-title mb-0">{{ post.author.username }}</h5>
+                                        </a>
+                                    </div>
+
+                                    <h4 class="card-subtitle mb-2 text-muted">{{ post.title }}</h4>
+                                    <p class="card-text">{{ post.content }}</p>
+                                    
+                                    {% if post.image %}
+                                        <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" alt="Post image">
+                                    {% endif %}
+                                    
+                                    <small class="text-muted">Posted on {{ post.created_at|date:"F j, Y" }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">{{ user_profile.username }} hasn't made any posts yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- Profile update form -->
-    <h3>Update Profile</h3>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" name="update_profile">Update</button>
-    </form>
-
-    <!-- Post creation form -->
-    <h3>Create Post</h3>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ post_form.as_p }}
-        <button type="submit" name="create_post">Post</button>
-    </form>
-
-    <!-- Logout button -->
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
 </div>
 {% endblock %}

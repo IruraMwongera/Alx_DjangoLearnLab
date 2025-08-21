@@ -1,8 +1,14 @@
 from rest_framework import viewsets, permissions
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
+from .forms import PostForm, CommentForm
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy
 
-# DRF API Views
+
+# DRF API Views (No changes needed here for now)
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow authors to edit/delete their own objects.
@@ -30,12 +36,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 # -----------------------------------
 # HTML Views for templates
 # -----------------------------------
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
-
-# Posts HTML views
 class PostListView(LoginRequiredMixin, ListView):
     model = Post
     template_name = "posts/post_list.html"
@@ -51,44 +51,44 @@ class PostDetailView(LoginRequiredMixin, DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
+    form_class = PostForm
     template_name = "posts/post_form.html"
-    fields = ['title', 'content']
-
+    
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('post_list')
+        # FIX: Added 'posts:' namespace
+        return reverse_lazy('posts:post_detail', kwargs={'pk': self.object.pk})
 
 
-class PostUpdateView(LoginRequiredMixin, UpdateView):
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
+    form_class = PostForm
     template_name = "posts/post_form.html"
-    fields = ['title', 'content']
-
-    def get_queryset(self):
-        # Only allow authors to update their own posts
-        return Post.objects.filter(author=self.request.user)
+    
+    def test_func(self):
+        post = self.get_object()
+        return self.request.user == post.author
 
     def get_success_url(self):
-        return reverse_lazy('post_list')
+        # FIX: Added 'posts:' namespace
+        return reverse_lazy('posts:post_detail', kwargs={'pk': self.object.pk})
 
 
-class PostDeleteView(LoginRequiredMixin, DeleteView):
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     template_name = "posts/post_confirm_delete.html"
-
-    def get_queryset(self):
-        # Only allow authors to delete their own posts
-        return Post.objects.filter(author=self.request.user)
+    
+    def test_func(self):
+        post = self.get_object()
+        return self.request.user == post.author
 
     def get_success_url(self):
-        return reverse_lazy('post_list')
+        # FIX: Added 'accounts:' namespace
+        return reverse_lazy('accounts:profile')
 
-
-# Comments HTML view
-from .forms import CommentForm  # we'll create this form in posts/forms.py
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
@@ -97,9 +97,15 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         post_id = self.kwargs.get('post_id')
-        form.instance.post = get_object_or_404(Post, id=post_id)
+        form.instance.post = get_object_or_404(Post, pk=post_id)
         form.instance.author = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('post_detail', kwargs={'pk': self.object.post.pk})
+        # FIX: Added 'posts:' namespace
+        return reverse_lazy('posts:post_detail', kwargs={'pk': self.object.post.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post'] = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
+        return context

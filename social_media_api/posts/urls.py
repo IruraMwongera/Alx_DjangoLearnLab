@@ -1,11 +1,16 @@
 from django.urls import path
-from . import views_html  # or from . import views (choose one)
+from . import views
+
+# This is the crucial line for namespacing
+app_name = 'posts'
 
 urlpatterns = [
-    path("", views_html.PostListView.as_view(), name="post_list"),
-    path("<int:pk>/", views_html.PostDetailView.as_view(), name="post_detail"),
-    path("new/", views_html.PostCreateView.as_view(), name="post_create"),
-    path("<int:pk>/edit/", views_html.PostUpdateView.as_view(), name="post_update"),
-    path("<int:pk>/delete/", views_html.PostDeleteView.as_view(), name="post_delete"),
-    path("<int:post_id>/comment/", views_html.CommentCreateView.as_view(), name="add_comment"),
+    path('', views.PostListView.as_view(), name='post_list'),
+    path('post/<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
+    path('post/new/', views.PostCreateView.as_view(), name='post_create'),
+    path('post/<int:pk>/update/', views.PostUpdateView.as_view(), name='post_update'),
+    path('post/<int:pk>/delete/', views.PostDeleteView.as_view(), name='post_delete'),
+    path('post/<int:post_id>/comment/', views.CommentCreateView.as_view(), name='comment_create'),
+    # Delete or comment out this line:
+    # path('post/search/', views.PostSearchView.as_view(), name='post_search'),
 ]
