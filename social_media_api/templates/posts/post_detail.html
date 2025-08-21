@@ -16,7 +16,6 @@
                         </a>
                     {% else %}
                         <a href="{% url 'accounts:user_profile' username=post.author.username %}">
-
                             <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
                         </a>
                     {% endif %}
@@ -37,13 +36,33 @@
                     {% endif %}
                 </div>
                 
-                <div class="card-footer bg-light d-flex justify-content-end">
-                    {% if request.user == post.author %}
-                        <a href="{% url 'posts:post_update' pk=post.pk %}" class="btn btn-sm btn-outline-info me-2">Edit Post</a>
-                        <a href="{% url 'posts:post_delete' pk=post.pk %}" class="btn btn-sm btn-outline-danger">Delete Post</a>
-                    {% endif %}
+                <div class="card-footer bg-white d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted me-2">{{ post.likes.count }} Likes</span>
+                        
+                        {% if user.is_authenticated %}
+                            {% if has_user_liked %}
+                                <form action="{% url 'posts:unlike_post' pk=post.pk %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger">Unlike</button>
+                                </form>
+                            {% else %}
+                                <form action="{% url 'posts:like_post' pk=post.pk %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-primary">Like</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        {% if request.user == post.author %}
+                            <a href="{% url 'posts:post_update' pk=post.pk %}" class="btn btn-sm btn-outline-info me-2">Edit Post</a>
+                            <a href="{% url 'posts:post_delete' pk=post.pk %}" class="btn btn-sm btn-outline-danger">Delete Post</a>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
+                </div>
 
             <div class="card shadow-sm">
                 <div class="card-header bg-light">

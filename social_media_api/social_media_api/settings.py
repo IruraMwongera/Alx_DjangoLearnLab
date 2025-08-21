@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'accounts',
     'posts',
     'widget_tweaks',
+    'notifications',
 ]
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 

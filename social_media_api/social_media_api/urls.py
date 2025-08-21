@@ -22,14 +22,12 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Clean way to include app URLs
     path('accounts/', include('accounts.urls')),
-    path('', include('posts.urls')),
+    path('', include('posts.urls')), # Make sure this is 'posts/' to avoid conflicts if you have a '' path in posts.urls
+    path('notifications/', include('notifications.urls')), # <-- Add this
 
 ]
 
 # This is important for serving user-uploaded media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-

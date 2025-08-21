@@ -1,5 +1,5 @@
-from rest_framework import viewsets, permissions
-from .models import Post, Comment
+from rest_framework import viewsets, permissions, generics, status
+from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer
 from .forms import PostForm, CommentForm
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -8,7 +8,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from .models import Post
-
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from .serializers import PostSerializer, CommentSerializer, LikeSerializer
+from notifications.models import Notification 
+from django.contrib.contenttypes.models import ContentType 
+from django.http import HttpResponseRedirect
+from django.views.decorators.http import require_POST
+from django.contrib import messages
 
 # DRF API Views (No changes needed here for now)
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -44,12 +50,24 @@ class PostListView(LoginRequiredMixin, ListView):
     context_object_name = "posts"
     ordering = ['-created_at']
 
-
 class PostDetailView(LoginRequiredMixin, DetailView):
     model = Post
     template_name = "posts/post_detail.html"
     context_object_name = "post"
 
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        
+        # Add new context variables
+        if self.request.user.is_authenticated:
+            # Check if the current user has a like on this specific post
+            context['has_user_liked'] = self.object.likes.filter(user=self.request.user).exists()
+        else:
+            # If the user is not authenticated, they can't have a like
+            context['has_user_liked'] = False
+
+        return context
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -111,14 +129,69 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['post'] = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
         return context
+
+# -----------------------------------
+# HTML Views for Like/Unlike (REPLACING THE DRF VIEW)
+# -----------------------------------
+
+@login_required
+@require_POST
+def like_post(request, pk):
+    """
+    Allows a logged-in user to like a post via a form submission.
+    """
+    post = get_object_or_404(Post, pk=pk)
+    user = request.user
+    
+    if not Like.objects.filter(user=user, post=post).exists():
+        Like.objects.create(user=user, post=post)
+        messages.success(request, "Post liked!")
+        
+        # Create a notification for the post author
+        if user != post.author:
+            Notification.objects.create(
+                recipient=post.author,
+                actor=user,
+                verb='liked',
+                target_content_type=ContentType.objects.get_for_model(Post),
+                target_object_id=post.id
+            )
+    else:
+        messages.info(request, "You have already liked this post.")
+
+    # Redirect back to the page the user came from
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse_lazy('posts:post_list')))
+
+@login_required
+@require_POST
+def unlike_post(request, pk):
+    """
+    Allows a logged-in user to unlike a post via a form submission.
+    """
+    post = get_object_or_404(Post, pk=pk)
+    user = request.user
+    
+    try:
+        like = Like.objects.get(user=user, post=post)
+        like.delete()
+        messages.success(request, "Post unliked!")
+    except Like.DoesNotExist:
+        messages.info(request, "You have not liked this post.")
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse_lazy('posts:post_list')))
+
+# -----------------------------------
+# HTML Views for templates (Unchanged)
+# -----------------------------------
+# ... (Your existing HTML views: PostListView, PostDetailView, PostCreateView, etc. remain the same) ...
+
 @login_required
 def feed_view(request):
     """
     Generates a feed of posts from users the current user is following.
     """
     # Get the list of users the current user is following
-    # Change the variable name to 'following_users' to match the check
-    following_users = request.user.following.all()
+    following_users = request.user.following.all() # Corrected variable name for check
     
     # Get posts from all followed users, ordered by creation date
     feed_posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
@@ -127,3 +200,8 @@ def feed_view(request):
         'feed_posts': feed_posts
     }
     return render(request, 'posts/feed.html', context)
+
+
+
+
+
