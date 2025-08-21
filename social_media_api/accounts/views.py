@@ -9,13 +9,11 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.db.models import Q
 from .forms import UserRegisterForm, ProfileUpdateForm
 from posts.models import Post
-from .models import CustomUser
+from .models import CustomUser # Removed 'Follow' as it does not exist
 from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
 
-# New DRF Imports
-from rest_framework import generics, permissions, status
-from rest_framework.response import Response
+
 # -----------------------------
 # Login & Logout Views (Unchanged)
 # -----------------------------
@@ -83,39 +81,30 @@ def user_profile_view(request, username):
     })
 
 # -------------------------------------------------------------
-# DRF API Views for Follow/Unfollow (Updated)
+# Corrected standard Django functions for ManyToManyField
 # -------------------------------------------------------------
-
-class FollowUserAPIView(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, user_id):
-        # This line is for the check to pass. It is not needed for the logic.
-        all_users = list(CustomUser.objects.all())
-        
-        user_to_follow = get_object_or_404(CustomUser, pk=user_id) # <-- CHANGED
-        
-        if request.user == user_to_follow:
-            return Response({"message": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if request.user.following.filter(id=user_to_follow.id).exists():
-            return Response({"message": f"You are already following {user_to_follow.username}."}, status=status.HTTP_200_OK)
-        else:
-            request.user.following.add(user_to_follow)
-            return Response({"message": f"You are now following {user_to_follow.username}."}, status=status.HTTP_200_OK)
+@login_required
+@require_POST
+def follow_user(request, user_id):
+    """
+    Allows a user to follow another user.
+    """
+    user_to_follow = get_object_or_404(CustomUser, id=user_id)
+    request.user.following.add(user_to_follow)
+    messages.success(request, f"You are now following {user_to_follow.username}.")
+    return redirect('accounts:user_profile', username=user_to_follow.username)
 
 
-class UnfollowUserAPIView(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, user_id):
-        user_to_unfollow = get_object_or_404(CustomUser, pk=user_id) # <-- CHANGED
-        
-        if not request.user.following.filter(id=user_to_unfollow.id).exists():
-            return Response({"message": f"You are not following {user_to_unfollow.username}."}, status=status.HTTP_200_OK)
-        else:
-            request.user.following.remove(user_to_unfollow)
-            return Response({"message": f"You have unfollowed {user_to_unfollow.username}."}, status=status.HTTP_200_OK)
+@login_required
+@require_POST
+def unfollow_user(request, user_id):
+    """
+    Allows a user to unfollow another user.
+    """
+    user_to_unfollow = get_object_or_404(CustomUser, id=user_id)
+    request.user.following.remove(user_to_unfollow)
+    messages.success(request, f"You have unfollowed {user_to_unfollow.username}.")
+    return redirect('accounts:user_profile', username=user_to_unfollow.username)
 
 
 # ... all your other views (Profile Update) remain the same ...

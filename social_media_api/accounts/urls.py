@@ -18,10 +18,10 @@ urlpatterns = [
     path('profile/update/', views.profile_update_view, name='profile_update'),
     
     # -----------------------------------------------------------
-    # Follow/Unfollow URLs are also specific due to the 'follow/' prefix
+    # Corrected Follow/Unfollow URLs (point to functions, not classes)
     # -----------------------------------------------------------
-    path('follow/<int:user_id>/', views.FollowUserAPIView.as_view(), name='follow'),
-    path('unfollow/<int:user_id>/', views.UnfollowUserAPIView.as_view(), name='unfollow'),
+    path('follow/<int:user_id>/', views.follow_user, name='follow'),
+    path('unfollow/<int:user_id>/', views.unfollow_user, name='unfollow'),
 
     # ---------------------------------------------------------------
     # The generic profile URL must come LAST
