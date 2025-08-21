@@ -134,17 +134,23 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 # HTML Views for Like/Unlike (REPLACING THE DRF VIEW)
 # -----------------------------------
 
+# -----------------------------------
+# HTML Views for Like/Unlike (REPLACING THE DRF VIEW)
+# -----------------------------------
 @login_required
 @require_POST
 def like_post(request, pk):
     """
     Allows a logged-in user to like a post via a form submission.
     """
+    # Use the required function to get the post
     post = get_object_or_404(Post, pk=pk)
     user = request.user
     
-    if not Like.objects.filter(user=user, post=post).exists():
-        Like.objects.create(user=user, post=post)
+    # Use get_or_create() to check if the like exists and create it if not
+    like, created = Like.objects.get_or_create(user=user, post=post)
+    
+    if created:
         messages.success(request, "Post liked!")
         
         # Create a notification for the post author
@@ -168,6 +174,7 @@ def unlike_post(request, pk):
     """
     Allows a logged-in user to unlike a post via a form submission.
     """
+    # Use the required function to get the post
     post = get_object_or_404(Post, pk=pk)
     user = request.user
     
