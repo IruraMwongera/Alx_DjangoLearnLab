@@ -16,7 +16,6 @@ from django.views.decorators.http import require_POST
 # New DRF Imports
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-
 # -----------------------------
 # Login & Logout Views (Unchanged)
 # -----------------------------
@@ -83,20 +82,19 @@ def user_profile_view(request, username):
         "is_following": is_following,
     })
 
-
 # -------------------------------------------------------------
-# DRF API Views for Follow/Unfollow (New)
+# DRF API Views for Follow/Unfollow (Updated)
 # -------------------------------------------------------------
 
 class FollowUserAPIView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, username):
+    def post(self, request, user_id):
         # This line is for the check to pass. It is not needed for the logic.
         all_users = list(CustomUser.objects.all())
         
-        user_to_follow = get_object_or_404(CustomUser, username=username)
-
+        user_to_follow = get_object_or_404(CustomUser, pk=user_id) # <-- CHANGED
+        
         if request.user == user_to_follow:
             return Response({"message": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -106,12 +104,13 @@ class FollowUserAPIView(generics.GenericAPIView):
             request.user.following.add(user_to_follow)
             return Response({"message": f"You are now following {user_to_follow.username}."}, status=status.HTTP_200_OK)
 
+
 class UnfollowUserAPIView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, username):
-        user_to_unfollow = get_object_or_404(CustomUser, username=username)
-
+    def post(self, request, user_id):
+        user_to_unfollow = get_object_or_404(CustomUser, pk=user_id) # <-- CHANGED
+        
         if not request.user.following.filter(id=user_to_unfollow.id).exists():
             return Response({"message": f"You are not following {user_to_unfollow.username}."}, status=status.HTTP_200_OK)
         else:
@@ -119,6 +118,7 @@ class UnfollowUserAPIView(generics.GenericAPIView):
             return Response({"message": f"You have unfollowed {user_to_unfollow.username}."}, status=status.HTTP_200_OK)
 
 
+# ... all your other views (Profile Update) remain the same ...
 # -----------------------------
 # Profile Update View (Unchanged)
 # -----------------------------
