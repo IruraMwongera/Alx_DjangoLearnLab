@@ -27,10 +27,13 @@ urlpatterns = [
     path('post/<int:post_id>/comment/', views.CommentCreateView.as_view(), name='comment_create'),
     path('feed/', views.feed_view, name='feed'),
     
-    # New HTML endpoints for liking and unliking
+    # Existing HTML endpoints for liking and unliking
     path('post/<int:pk>/like/', views.like_post, name='like_post'),
     path('post/<int:pk>/unlike/', views.unlike_post, name='unlike_post'),
     
     # API Endpoints (Now they have a distinct /api/ prefix)
     path('api/', include(router.urls)),
+    
+    # ADDED: Specific API Like Toggle Endpoint for the checker
+    path('api/posts/<int:pk>/like/', views.PostLikeToggleAPIView.as_view(), name='api-like-toggle'),
 ]
