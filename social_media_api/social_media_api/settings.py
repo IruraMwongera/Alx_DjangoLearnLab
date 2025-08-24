@@ -21,6 +21,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")  # fallback for lo
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost 127.0.0.1").split()
 
+
 # -------------------------------------------------------------------
 # Application definition
 # -------------------------------------------------------------------
@@ -94,11 +95,11 @@ WSGI_APPLICATION = "social_media_api.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "social_media"),
-        "USER": os.getenv("POSTGRES_USER", "postgres"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "Jack@2020"),
-        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "NAME": "Social_media_g2tt",
+        "USER": "social_media_g2tt_user",
+        "PASSWORD": "hG0Vu5GQ7gN9jf9qxQkGEfdm63DOQDwE",
+        "HOST": "dpg-d2le0d75r7bs73djm17g-a.oregon-postgres.render.com",
+        "PORT": "5432",
     }
 }
 
