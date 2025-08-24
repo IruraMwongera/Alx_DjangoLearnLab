@@ -5,110 +5,333 @@
 {% block head_title %}{{ post.title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white d-flex align-items-center">
-                    {% if post.author.profile_picture %}
-                        <a href="{% url 'accounts:user_profile' username=post.author.username %}">
-                            <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}'s profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                        </a>
-                    {% else %}
-                        <a href="{% url 'accounts:user_profile' username=post.author.username %}">
-                            <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                        </a>
-                    {% endif %}
-                    
-                    <div>
-                        <a href="{% url 'accounts:user_profile' username=post.author.username %}" class="text-decoration-none text-dark">
-                            <h5 class="mb-0">{{ post.author.username }}</h5>
-                        </a>
-                        <small class="text-muted">{{ post.created_at|date:"F j, Y, P" }}</small>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <h2 class="card-title">{{ post.title }}</h2>
-                    <p class="card-text">{{ post.content|linebreaks }}</p>
-                    
-                    {% if post.image %}
-                        <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" alt="Post image">
-                    {% endif %}
-                </div>
-                
-                <div class="card-footer bg-white d-flex align-items-center justify-content-between">
-                    <div>
-                        <span class="text-muted me-2">{{ post.likes.count }} Likes</span>
+<style>
+    /* Global Styles for Post Detail Page */
+    .post-detail-container {
+        min-height: 70vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 5rem;
+        animation: fadeInScale 0.8s ease-out;
+    }
+
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    /* Card Styling */
+    .post-card, .comments-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .post-card:hover, .comments-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+    }
+    
+    .post-card::before, .comments-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #48bb78, #38b2ac, #4299e1, #48bb78);
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease-in-out infinite;
+    }
+
+    @keyframes gradientFlow {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    /* Card Header Customizations */
+    .post-card .card-header, .comments-card .card-header {
+        background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 178, 172, 0.1));
+        border-bottom: 1px solid rgba(72, 187, 120, 0.2);
+        padding: 1.5rem 2rem;
+        position: relative;
+    }
+
+    .post-card .card-header a, .post-card .card-header h5 {
+        background: linear-gradient(135deg, #48bb78, #38b2ac);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .post-card .card-header small {
+        color: #718096 !important;
+        font-weight: 500;
+    }
+
+    .post-card .card-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #4a5568, #2d3748);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .post-card .card-text {
+        font-size: 1rem;
+        color: #4a5568;
+        line-height: 1.6;
+    }
+
+    /* Image and Media */
+    .post-card .img-fluid {
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .post-card .img-fluid:hover {
+        transform: scale(1.02);
+    }
+    
+    /* Post Footer Actions (Likes/Dislikes/Edit) */
+    .post-card .card-footer {
+        background: rgba(255, 255, 255, 0.7);
+        border-top: 1px solid rgba(72, 187, 120, 0.1);
+    }
+
+    .btn-custom {
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-like {
+        background: linear-gradient(135deg, #48bb78, #38b2ac);
+        border: none;
+        color: white;
+    }
+    
+    .btn-outline-like {
+        border: 2px solid #48bb78;
+        color: #48bb78;
+        background: transparent;
+    }
+
+    .btn-dislike {
+        background: linear-gradient(135deg, #f56565, #e53e3e);
+        border: none;
+        color: white;
+    }
+    
+    .btn-outline-dislike {
+        border: 2px solid #e53e3e;
+        color: #e53e3e;
+        background: transparent;
+    }
+
+    .btn-edit, .btn-delete {
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+    }
+    
+    .btn-edit {
+        background: linear-gradient(135deg, #4299e1, #667eea);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #e53e3e, #c53030);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+    }
+
+    /* Comments Section */
+    .comments-card {
+        margin-top: 2rem;
+    }
+    
+    .comments-card .card-header {
+        background: linear-gradient(135deg, rgba(66, 153, 225, 0.1), rgba(102, 126, 234, 0.1));
+        color: #2d3748;
+    }
+
+    .comment-item {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        margin-bottom: 1rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .comment-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    .comment-author {
+        font-weight: 600;
+        background: linear-gradient(135deg, #4299e1, #667eea);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .comment-form-section {
+        background: rgba(72, 187, 120, 0.05);
+        border-radius: 15px;
+        padding: 2rem;
+        border: 1px solid rgba(72, 187, 120, 0.1);
+    }
+
+    .btn-comment-submit {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-comment-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+</style>
+
+<div class="post-detail-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="post-card shadow-sm mb-4">
+                    <div class="card-header d-flex align-items-center">
+                        {% if post.author.profile_picture %}
+                            <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                                <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}'s profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            </a>
+                        {% else %}
+                            <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                                <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            </a>
+                        {% endif %}
                         
-                        {% if user.is_authenticated %}
-                            {% if has_user_liked %}
-                                <form action="{% url 'posts:unlike_post' pk=post.pk %}" method="post" class="d-inline">
+                        <div>
+                            <a href="{% url 'accounts:user_profile' username=post.author.username %}" class="text-decoration-none text-dark">
+                                <h5 class="mb-0">{{ post.author.username }}</h5>
+                            </a>
+                            <small class="text-muted">{{ post.created_at|date:"F j, Y, P" }}</small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="card-title">{{ post.title }}</h2>
+                        <p class="card-text">{{ post.content|linebreaks }}</p>
+                        
+                        {% if post.image %}
+                            <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" alt="Post image">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <div>
+                            {% if user.is_authenticated %}
+                                <form action="{% url 'posts:like_post' pk=post.pk %}" method="post" class="d-inline me-2">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger">Unlike</button>
+                                    <button type="submit" class="btn btn-sm btn-custom {% if has_user_liked %}btn-like{% else %}btn-outline-like{% endif %}">
+                                        👍 Like ({{ post.likes.count }})
+                                    </button>
+                                </form>
+
+                                <form action="{% url 'posts:dislike_post' pk=post.pk %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-custom {% if has_user_disliked %}btn-dislike{% else %}btn-outline-dislike{% endif %}">
+                                        👎 Dislike ({{ post.dislikes.count }})
+                                    </button>
                                 </form>
                             {% else %}
-                                <form action="{% url 'posts:like_post' pk=post.pk %}" method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-primary">Like</button>
-                                </form>
+                                <span class="text-muted me-2">{{ post.likes.count }} Like{{ post.likes.count|pluralize }}</span>
+                                <span class="text-muted">{{ post.dislikes.count }} Dislike{{ post.dislikes.count|pluralize }}</span>
                             {% endif %}
-                        {% endif %}
-                    </div>
+                        </div>
 
-                    <div>
-                        {% if request.user == post.author %}
-                            <a href="{% url 'posts:post_update' pk=post.pk %}" class="btn btn-sm btn-outline-info me-2">Edit Post</a>
-                            <a href="{% url 'posts:post_delete' pk=post.pk %}" class="btn btn-sm btn-outline-danger">Delete Post</a>
-                        {% endif %}
+                        <div>
+                            {% if request.user == post.author %}
+                                <a href="{% url 'posts:post_update' pk=post.pk %}" class="btn btn-sm btn-edit me-2">Edit Post</a>
+                                <a href="{% url 'posts:post_delete' pk=post.pk %}" class="btn btn-sm btn-delete">Delete Post</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-                </div>
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h4>Comments ({{ post.comments.count }})</h4>
-                </div>
-                <div class="card-body">
-                    {% if post.comments %}
-                        <div class="list-group mb-4">
-                            {% for comment in post.comments.all %}
-                                <div class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            {% if comment.author.profile_picture %}
-                                                <img src="{{ comment.author.profile_picture.url }}" alt="{{ comment.author.username }}'s profile picture" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
-                                            {% else %}
-                                                <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
-                                            {% endif %}
-                                            <a href="{% url 'accounts:user_profile' username=comment.author.username %}" class="h6 mb-1">{{ comment.author.username }}</a>
+                <div class="comments-card shadow-sm">
+                    <div class="card-header">
+                        <h4>Comments ({{ post.comments.count }})</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if post.comments %}
+                            <div class="list-group mb-4">
+                                {% for comment in post.comments.all %}
+                                    <div class="comment-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                {% if comment.author.profile_picture %}
+                                                    <img src="{{ comment.author.profile_picture.url }}" alt="{{ comment.author.username }}'s profile picture" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                                {% else %}
+                                                    <img src="{% static 'images/default_profile.png' %}" alt="Default profile picture" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                                {% endif %}
+                                                <a href="{% url 'accounts:user_profile' username=comment.author.username %}" class="h6 mb-1 comment-author">{{ comment.author.username }}</a>
+                                            </div>
+                                            <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
                                         </div>
-                                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                        <p class="mb-1 mt-2 text-dark">{{ comment.content }}</p>
                                     </div>
-                                    <p class="mb-1 mt-2">{{ comment.content }}</p>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-center text-muted">No comments yet. Be the first to comment!</p>
+                        {% endif %}
+                        
+                        <div class="mt-4 comment-form-section">
+                            {% if request.user.is_authenticated %}
+                                <h5>Leave a comment</h5>
+                                <form method="post" action="{% url 'posts:comment_create' post_id=post.pk %}">
+                                    {% csrf_token %}
+                                    {{ comment_form|crispy }}
+                                    <div class="d-grid gap-2 mt-3">
+                                        <button class="btn btn-primary btn-comment-submit" type="submit">Submit Comment</button>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <div class="text-center">
+                                    <p class="text-muted">You must be logged in to comment.</p>
+                                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-custom">Log in to Comment</a>
                                 </div>
-                            {% endfor %}
+                            {% endif %}
                         </div>
-                    {% else %}
-                        <p class="text-center text-muted">No comments yet. Be the first to comment!</p>
-                    {% endif %}
-                    
-                    {% if request.user.is_authenticated %}
-                        <div class="mt-4">
-                            <h5>Leave a comment</h5>
-                            <form method="post" action="{% url 'posts:comment_create' post_id=post.pk %}">
-                                {% csrf_token %}
-                                {{ comment_form|crispy }}
-                                <div class="d-grid gap-2 mt-3">
-                                    <button class="btn btn-primary" type="submit">Submit Comment</button>
-                                </div>
-                            </form>
-                        </div>
-                    {% else %}
-                        <div class="mt-4 text-center">
-                            <p class="text-muted">You must be logged in to comment.</p>
-                            <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary">Log in to Comment</a>
-                        </div>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

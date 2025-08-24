@@ -2,7 +2,7 @@
 
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.response import Response
-from .models import Post, Comment, Like
+from .models import Post, Comment, Like, Dislike
 from .serializers import PostSerializer, CommentSerializer
 from .forms import PostForm, CommentForm
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -16,18 +16,19 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 
-
-# DRF API Views
+# -----------------------
+# DRF API Permissions
+# -----------------------
 class IsOwnerOrReadOnly(permissions.BasePermission):
-    """
-    Custom permission to only allow authors to edit/delete their own objects.
-    """
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.author == request.user
 
 
+# -----------------------
+# DRF API ViewSets
+# -----------------------
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
@@ -41,10 +42,19 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
+class HomePostListView(ListView):
+    model = Post
+    template_name = "posts/home.html"   # create this template
+    context_object_name = "posts"
+    paginate_by = None  # optional, if you don’t want pagination
 
-# -----------------------------------
-# HTML Views for templates
-# -----------------------------------
+    def get_queryset(self):
+        return Post.objects.order_by("-created_at")[:10]  # latest 10
+
+
+# -----------------------
+# HTML Views
+# -----------------------
 class PostListView(LoginRequiredMixin, ListView):
     model = Post
     template_name = "posts/post_list.html"
@@ -61,8 +71,10 @@ class PostDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_authenticated:
             context['has_user_liked'] = self.object.likes.filter(user=self.request.user).exists()
+            context['has_user_disliked'] = self.object.dislikes.filter(user=self.request.user).exists()
         else:
             context['has_user_liked'] = False
+            context['has_user_disliked'] = False
         return context
 
 
@@ -85,8 +97,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = "posts/post_form.html"
     
     def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
+        return self.request.user == self.get_object().author
 
     def get_success_url(self):
         return reverse_lazy('posts:post_detail', kwargs={'pk': self.object.pk})
@@ -97,8 +108,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     template_name = "posts/post_confirm_delete.html"
     
     def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
+        return self.request.user == self.get_object().author
 
     def get_success_url(self):
         return reverse_lazy('accounts:profile')
@@ -128,27 +138,22 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 def feed_view(request):
     following_users = request.user.following.all()
     feed_posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
-    
-    context = {
-        'feed_posts': feed_posts
-    }
-    return render(request, 'posts/feed.html', context)
+    return render(request, 'posts/feed.html', {'feed_posts': feed_posts})
 
 
-# -------------------------------------------------------------
-# DRF API View for Like/Unlike Toggle (Added for checker)
-# -------------------------------------------------------------
+# -----------------------
+# DRF API Like/Dislike (Mutually Exclusive)
+# -----------------------
 class PostLikeToggleAPIView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Post.objects.all()
 
     def post(self, request, pk):
-        # --- START WORKAROUND FOR CHECKER ---
-        checker_dummy_post = generics.get_object_or_404(Post, pk=pk)
-        # --- END WORKAROUND FOR CHECKER ---
-        
-        post = self.get_object()
-        # exact string the checker expects:
+        post = get_object_or_404(Post, pk=pk)
+
+        # Remove dislike if user had disliked
+        Dislike.objects.filter(user=request.user, post=post).delete()
+
         like, created = Like.objects.get_or_create(user=request.user, post=post)
 
         if not created:
@@ -166,14 +171,36 @@ class PostLikeToggleAPIView(generics.GenericAPIView):
             return Response({"message": "Post liked."}, status=status.HTTP_201_CREATED)
 
 
-# -------------------------------------------------------------
-# HTML Views for Like/Unlike
-# -------------------------------------------------------------
+class PostDislikeToggleAPIView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Post.objects.all()
+
+    def post(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
+
+        # Remove like if user had liked
+        Like.objects.filter(user=request.user, post=post).delete()
+
+        dislike, created = Dislike.objects.get_or_create(user=request.user, post=post)
+
+        if not created:
+            dislike.delete()
+            return Response({"message": "Post undisliked."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "Post disliked."}, status=status.HTTP_201_CREATED)
+
+
+# -----------------------
+# HTML Views Like/Dislike (Mutually Exclusive)
+# -----------------------
 @login_required
 @require_POST
 def like_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    # exact string the checker expects:
+
+    # Remove dislike if it exists
+    Dislike.objects.filter(user=request.user, post=post).delete()
+
     like, created = Like.objects.get_or_create(user=request.user, post=post)
     
     if created:
@@ -187,18 +214,24 @@ def like_post(request, pk):
                 target_object_id=post.id
             )
     else:
-        messages.info(request, "You have already liked this post.")
+        like.delete()
+        messages.success(request, "Like removed.")
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse_lazy('posts:post_list')))
 
 
 @login_required
 @require_POST
-def unlike_post(request, pk):
+def dislike_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    try:
-        like = Like.objects.get(user=request.user, post=post)
-        like.delete()
-        messages.success(request, "Post unliked!")
-    except Like.DoesNotExist:
-        messages.info(request, "You have not liked this post.")
+
+    # Remove like if it exists
+    Like.objects.filter(user=request.user, post=post).delete()
+
+    dislike, created = Dislike.objects.get_or_create(user=request.user, post=post)
+
+    if created:
+        messages.success(request, "Post disliked!")
+    else:
+        dislike.delete()
+        messages.success(request, "Dislike removed.")
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse_lazy('posts:post_list')))

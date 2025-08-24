@@ -20,14 +20,18 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
-    path('accounts/', include('accounts.urls')),
-    path('', include('posts.urls')), # Make sure this is 'posts/' to avoid conflicts if you have a '' path in posts.urls
-    path('notifications/', include('notifications.urls')), # <-- Add this
+    path("admin/", admin.site.urls),
 
+    # Auth / Accounts
+    path("accounts/", include("accounts.urls")),
+
+    # Posts (homepage + posts related routes)
+    path("", include("posts.urls")),
+
+    # Notifications
+    path("notifications/", include("notifications.urls")),
 ]
 
-# This is important for serving user-uploaded media files in development
+# Serve user-uploaded media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

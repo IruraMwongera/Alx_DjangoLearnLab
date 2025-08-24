@@ -10,39 +10,189 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h2 class="mb-0">
-                        {% if form.instance.pk %}
-                            Update Post
-                        {% else %}
-                            Create Post
-                        {% endif %}
-                    </h2>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        <fieldset class="form-group">
-                            <legend class="border-bottom mb-4">Post Details</legend>
-                            {{ form|crispy }}
-                        </fieldset>
+<style>
+    /* Global Styles for Post Form Page */
+    .post-form-container {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5rem 0;
+        animation: fadeInScale 0.8s ease-out;
+    }
 
-                        <div class="form-group mt-3">
-                            <button class="btn btn-success" type="submit">
-                                {% if form.instance.pk %}
-                                    Update Post
-                                {% else %}
-                                    Publish Post
-                                {% endif %}
-                            </button>
-                            <a href="{% if form.instance.pk %}{% url 'posts:post_detail' pk=form.instance.pk %}{% else %}{% url 'accounts:profile' %}{% endif %}" class="btn btn-secondary ms-2">Cancel</a>
-                        </div>
-                    </form>
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    /* Card Styling */
+    .post-form-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .post-form-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+    }
+    
+    .post-form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #48bb78, #38b2ac, #4299e1, #48bb78);
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease-in-out infinite;
+    }
+
+    @keyframes gradientFlow {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    /* Header Styling */
+    .post-form-card .card-header {
+        background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 178, 172, 0.1));
+        border-bottom: 1px solid rgba(72, 187, 120, 0.2);
+        padding: 2rem;
+        position: relative;
+    }
+
+    .post-form-card .card-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #48bb78, #38b2ac);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Form Body Styling */
+    .post-form-card .card-body {
+        padding: 2rem;
+    }
+
+    .post-form-card fieldset {
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .post-form-card legend {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        background: none;
+        padding: 0;
+        border-bottom: 2px solid rgba(72, 187, 120, 0.3);
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+    
+    .post-form-card .form-control {
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .post-form-card .form-control:focus {
+        background: white;
+        box-shadow: 0 0 0 0.25rem rgba(72, 187, 120, 0.25);
+        border-color: #48bb78;
+    }
+
+    /* Custom Buttons */
+    .btn-custom-submit {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-custom-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-custom-cancel {
+        background: rgba(255, 255, 255, 0.8);
+        border: 2px solid rgba(113, 128, 150, 0.3);
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        color: #718096;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-custom-cancel:hover {
+        background: #e2e8f0;
+        color: #2d3748;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(113, 128, 150, 0.2);
+    }
+</style>
+
+<div class="post-form-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="post-form-card shadow-sm">
+                    <div class="card-header text-white">
+                        <h2 class="mb-0">
+                            {% if form.instance.pk %}
+                                Update Post
+                            {% else %}
+                                Create Post
+                            {% endif %}
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <fieldset class="form-group">
+                                <legend class="border-bottom mb-4">Post Details</legend>
+                                {{ form|crispy }}
+                            </fieldset>
+
+                            <div class="form-group mt-3">
+                                <button class="btn btn-custom-submit" type="submit">
+                                    {% if form.instance.pk %}
+                                        Update Post
+                                    {% else %}
+                                        Publish Post
+                                    {% endif %}
+                                </button>
+                                <a href="{% if form.instance.pk %}{% url 'posts:post_detail' pk=form.instance.pk %}{% else %}{% url 'accounts:profile' %}{% endif %}" class="btn btn-custom-cancel ms-2">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

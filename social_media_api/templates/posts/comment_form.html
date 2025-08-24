@@ -4,27 +4,177 @@
 {% block head_title %}Comment on Post{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white text-center">
-                    <h2 class="mb-0">Add a Comment</h2>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <fieldset class="form-group">
-                            <legend class="border-bottom mb-4">On Post: "{{ post.title }}"</legend>
-                            {{ form|crispy }}
-                        </fieldset>
+<style>
+    /* Global Styles for Comment Form Page */
+    .comment-form-container {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5rem 0;
+        animation: fadeInScale 0.8s ease-out;
+    }
 
-                        <div class="form-group mt-3">
-                            <button class="btn btn-primary" type="submit">Submit Comment</button>
-                            <a href="{% url 'posts:post_detail' pk=post.pk %}" class="btn btn-secondary ms-2">Cancel</a>
-                        </div>
-                    </form>
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    /* Card Styling */
+    .comment-form-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .comment-form-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+    }
+
+    .comment-form-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #48bb78, #38b2ac, #4299e1, #48bb78);
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease-in-out infinite;
+    }
+
+    @keyframes gradientFlow {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    /* Header Styling */
+    .comment-form-card .card-header {
+        background: linear-gradient(135deg, rgba(66, 153, 225, 0.1), rgba(102, 126, 234, 0.1));
+        border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+        padding: 2rem;
+        position: relative;
+    }
+
+    .comment-form-card .card-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #4299e1, #667eea);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Form Body Styling */
+    .comment-form-card .card-body {
+        padding: 2rem;
+    }
+
+    .comment-form-card fieldset {
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .comment-form-card legend {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        background: none;
+        padding: 0;
+        border-bottom: 2px solid rgba(66, 153, 225, 0.3);
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+
+    .comment-form-card .form-control {
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .comment-form-card .form-control:focus {
+        background: white;
+        box-shadow: 0 0 0 0.25rem rgba(66, 153, 225, 0.25);
+        border-color: #4299e1;
+    }
+
+    /* Custom Buttons */
+    .btn-custom-submit {
+        background: linear-gradient(135deg, #48bb78, #38b2ac);
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        color: white;
+        box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-custom-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+    }
+
+    .btn-custom-cancel {
+        background: rgba(255, 255, 255, 0.8);
+        border: 2px solid rgba(113, 128, 150, 0.3);
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        color: #718096;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-custom-cancel:hover {
+        background: #e2e8f0;
+        color: #2d3748;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(113, 128, 150, 0.2);
+    }
+</style>
+
+<div class="comment-form-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="comment-form-card shadow-sm">
+                    <div class="card-header text-white text-center">
+                        <h2 class="mb-0">Add a Comment</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <fieldset class="form-group">
+                                <legend class="border-bottom mb-4">On Post: "{{ post.title }}"</legend>
+                                {{ form|crispy }}
+                            </fieldset>
+
+                            <div class="form-group mt-3">
+                                <button class="btn btn-custom-submit" type="submit">Submit Comment</button>
+                                <a href="{% url 'posts:post_detail' pk=post.pk %}" class="btn btn-custom-cancel ms-2">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

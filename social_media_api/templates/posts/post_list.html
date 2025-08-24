@@ -1,22 +1,216 @@
 {% extends "base.html" %}
 {% load static %}
+{% load custom_filters %} {# Add this line to load your new filter #}
 
 {% block head_title %}Latest Posts{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<style>
+    /* Global Styles for Post List Page */
+    .post-list-container {
+        min-height: 70vh;
+        padding-top: 5rem;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Main Header and Button Section */
+    .header-section {
+        border-bottom: 2px solid rgba(72, 187, 120, 0.3);
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+        animation: slideInDown 0.8s ease-out;
+    }
+
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .header-section h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #48bb78, #38b2ac);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .btn-create-post {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-create-post:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Post Card Styling */
+    .post-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+        animation: fadeIn 0.8s ease-out forwards;
+        opacity: 0; /* Initially hidden for animation */
+    }
+
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+    }
+    
+    .post-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #48bb78, #38b2ac, #4299e1, #48bb78);
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease-in-out infinite;
+    }
+
+    @keyframes gradientFlow {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    /* Card Header Customizations */
+    .post-card .card-header {
+        background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 178, 172, 0.1));
+        border-bottom: 1px solid rgba(72, 187, 120, 0.2);
+        padding: 1.5rem;
+    }
+
+    .post-card .card-header a h5 {
+        background: linear-gradient(135deg, #48bb78, #38b2ac);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+
+    .post-card .card-header small {
+        color: #718096 !important;
+        font-weight: 500;
+    }
+
+    /* Post Content Styling */
+    .post-card .card-body h3 a {
+        font-weight: 700;
+        color: #2d3748;
+        transition: color 0.3s ease;
+    }
+
+    .post-card .card-body h3 a:hover {
+        color: #48bb78;
+    }
+
+    .post-card .card-body p {
+        color: #4a5568;
+        line-height: 1.6;
+    }
+    
+    .post-card .img-fluid {
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .post-card .img-fluid:hover {
+        transform: scale(1.01);
+    }
+
+    /* Footer and Read More Button */
+    .post-card .card-footer {
+        background: rgba(255, 255, 255, 0.7);
+        border-top: 1px solid rgba(72, 187, 120, 0.1);
+        padding: 1rem 1.5rem;
+    }
+
+    .btn-read-more {
+        background: linear-gradient(135deg, #4299e1, #667eea);
+        border: none;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        color: white;
+        box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-read-more:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(66, 153, 225, 0.4);
+    }
+    
+    /* Empty State Message */
+    .alert-glass {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        color: #4a5568;
+    }
+    
+    .alert-link {
+        font-weight: 600;
+        color: #48bb78;
+        transition: color 0.3s ease;
+    }
+
+    .alert-link:hover {
+        color: #38a169;
+    }
+    
+    /* Animation for post cards */
+    {% for post in posts %}
+        .post-card:nth-child({{ forloop.counter }}) {
+            {# Change the line below #}
+            animation-delay: {{ forloop.counter | add:1 | divide:5 }}s;
+        }
+    {% endfor %}
+</style>
+
+<div class="container post-list-container">
+    <div class="d-flex justify-content-between align-items-center header-section">
         <h2>Latest Posts</h2>
         {% if request.user.is_authenticated %}
-            <a href="{% url 'posts:post_create' %}" class="btn btn-primary">Create Post</a>
+            <a href="{% url 'posts:post_create' %}" class="btn btn-create-post">Create Post</a>
         {% endif %}
     </div>
 
     <div class="row justify-content-center">
         <div class="col-md-8">
             {% for post in posts %}
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white d-flex align-items-center">
+            <div class="post-card shadow-sm mb-4">
+                <div class="card-header d-flex align-items-center">
                     {% if post.author.profile_picture %}
                         <a href="{% url 'accounts:user_profile' username=post.author.username %}">
                             <img src="{{ post.author.profile_picture.url }}" alt="{{ post.author.username }}'s profile picture" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
@@ -28,7 +222,7 @@
                     {% endif %}
                     
                     <div>
-                        <a href="{% url 'accounts:user_profile' username=post.author.username %}">
+                        <a href="{% url 'accounts:user_profile' username=post.author.username %}" class="text-decoration-none">
                             <h5 class="mb-0">{{ post.author.username }}</h5>
                         </a>
                         <small class="text-muted">{{ post.created_at|date:"F j, Y, P" }}</small>
@@ -42,15 +236,23 @@
                         <img src="{{ post.image.url }}" class="img-fluid rounded mb-2" alt="Post image">
                     {% endif %}
                 </div>
-                <div class="card-footer bg-light text-end">
-                    <a href="{% url 'posts:post_detail' pk=post.pk %}" class="btn btn-sm btn-outline-secondary">Read More</a>
+                <div class="card-footer text-end">
+                    <a href="{% url 'posts:post_detail' pk=post.pk %}" class="btn btn-read-more">Read More</a>
                 </div>
             </div>
             {% empty %}
-                <div class="alert alert-info text-center" role="alert">
-                    No posts have been created yet.
+                <div class="alert alert-info text-center alert-glass" role="alert">
+                    <h4 class="mb-3">No posts have been created yet.</h4>
                     {% if request.user.is_authenticated %}
-                        <a href="{% url 'posts:post_create' %}" class="alert-link">Be the first to create one!</a>
+                        <p class="mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            <a href="{% url 'posts:post_create' %}" class="alert-link">Be the first to create one!</a>
+                        </p>
+                    {% else %}
+                        <p class="mb-0">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            <a href="{% url 'accounts:login' %}" class="alert-link">Log in to create a post!</a>
+                        </p>
                     {% endif %}
                 </div>
             {% endfor %}

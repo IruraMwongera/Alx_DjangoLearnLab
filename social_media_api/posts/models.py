@@ -27,6 +27,20 @@ class Like(models.Model):
     def __str__(self):
         return f"{self.user.username} likes {self.post.title}"
 
+
+class Dislike(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='dislikes')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='dislikes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'post')  # A user can dislike a post only once
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} dislikes {self.post.title}"
+
+
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="comments")

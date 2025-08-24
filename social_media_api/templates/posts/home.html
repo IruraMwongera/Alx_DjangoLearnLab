@@ -1,6 +1,26 @@
 {% extends "base.html" %}
-
 {% block content %}
-  <h1>Welcome to the Social Media App!</h1>
-  <p>This is the homepage of the posts app.</p>
+<div class="container mt-5">
+  <h1 class="mb-4">Latest Posts</h1>
+  <div class="row">
+    {% for post in posts %}
+      <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+          {% if post.image %}
+            <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="{% url 'posts:post_detail' post.pk %}">{{ post.title }}</a>
+            </h5>
+            <p class="card-text">{{ post.content|truncatewords:25 }}</p>
+          </div>
+          <div class="card-footer text-muted">
+            By {{ post.author.username }} on {{ post.created_at|date:"F j, Y" }}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
 {% endblock %}
