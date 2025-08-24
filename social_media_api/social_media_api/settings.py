@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-# Load local .env file (optional, for local development)
+# Load .env variables (local development)
 load_dotenv()
 
 # -------------------------------------------------------------------
@@ -17,12 +17,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -------------------------------------------------------------------
 # Security
 # -------------------------------------------------------------------
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")  # fallback for local dev
-DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
-# Fallback for automated checks
-if not os.getenv("DJANGO_DEBUG"):
-    DEBUG = False
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost 127.0.0.1").split()
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
+
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
+
+ALLOWED_HOSTS = os.getenv(
+    "DJANGO_ALLOWED_HOSTS",
+    "localhost 127.0.0.1 .onrender.com"
+).split()
 
 # -------------------------------------------------------------------
 # Applications
@@ -42,18 +44,20 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_bootstrap5",
     "widget_tweaks",
+    "cloudinary",
+    "cloudinary_storage",
 
     # Local apps
     "accounts",
     "posts",
     "notifications",
-    "cloudinary",
-    "cloudinary_storage",
 ]
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+# Crispy forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# DRF settings
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -62,13 +66,13 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
-
-
-# Security settings for production
-SECURE_BROWSER_XSS_FILTER = True            # Enables XSS filtering in browsers
-X_FRAME_OPTIONS = "DENY"                     # Prevents clickjacking
-SECURE_CONTENT_TYPE_NOSNIFF = True          # Prevents MIME-type sniffing
-SECURE_SSL_REDIRECT = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "False").lower() == "true"  # Redirect HTTP to HTTPS if needed
+# -------------------------------------------------------------------
+# Security headers
+# -------------------------------------------------------------------
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_SSL_REDIRECT = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "False").lower() == "true"
 
 # -------------------------------------------------------------------
 # Middleware
@@ -105,7 +109,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "social_media_api.wsgi.application"
 
 # -------------------------------------------------------------------
-# Database (Postgres via environment variables)
+# Database (Postgres via Render env vars)
 # -------------------------------------------------------------------
 DATABASES = {
     "default": {
@@ -148,14 +152,15 @@ LOGOUT_REDIRECT_URL = "posts:post_list"
 # -------------------------------------------------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # -------------------------------------------------------------------
-# Media (user uploads, profile pictures)
+# Media (user uploads → Cloudinary)
 # -------------------------------------------------------------------
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 # -------------------------------------------------------------------
 # Default primary key
