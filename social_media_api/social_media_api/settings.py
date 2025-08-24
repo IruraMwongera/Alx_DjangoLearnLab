@@ -60,6 +60,14 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
+
+
+# Security settings for production
+SECURE_BROWSER_XSS_FILTER = True            # Enables XSS filtering in browsers
+X_FRAME_OPTIONS = "DENY"                     # Prevents clickjacking
+SECURE_CONTENT_TYPE_NOSNIFF = True          # Prevents MIME-type sniffing
+SECURE_SSL_REDIRECT = os.getenv("DJANGO_SECURE_SSL_REDIRECT", "False").lower() == "true"  # Redirect HTTP to HTTPS if needed
+
 # -------------------------------------------------------------------
 # Middleware
 # -------------------------------------------------------------------
