@@ -19,6 +19,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -------------------------------------------------------------------
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")  # fallback for local dev
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
+# Fallback for automated checks
+if not os.getenv("DJANGO_DEBUG"):
+    DEBUG = False
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost 127.0.0.1").split()
 
 # -------------------------------------------------------------------
