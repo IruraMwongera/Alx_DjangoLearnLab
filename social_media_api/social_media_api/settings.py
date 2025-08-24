@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env (recommended)
+# Load local .env file (optional, for local development)
 load_dotenv()
 
 # -------------------------------------------------------------------
@@ -17,34 +17,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -------------------------------------------------------------------
 # Security
 # -------------------------------------------------------------------
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")  # fallback for local
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")  # fallback for local dev
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost 127.0.0.1").split()
 
-
 # -------------------------------------------------------------------
-# Application definition
+# Applications
 # -------------------------------------------------------------------
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
 
-    # Third-party
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'rest_framework.authtoken',
-    'crispy_forms',
-    'crispy_bootstrap5',
-    'widget_tweaks',
+    # Third-party apps
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework.authtoken",
+    "crispy_forms",
+    "crispy_bootstrap5",
+    "widget_tweaks",
 
     # Local apps
-    'accounts',
-    'posts',
-    'notifications',
+    "accounts",
+    "posts",
+    "notifications",
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -58,9 +57,12 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
+# -------------------------------------------------------------------
+# Middleware
+# -------------------------------------------------------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # static files
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -90,16 +92,16 @@ TEMPLATES = [
 WSGI_APPLICATION = "social_media_api.wsgi.application"
 
 # -------------------------------------------------------------------
-# Database (Postgres)
+# Database (Postgres via environment variables)
 # -------------------------------------------------------------------
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "Social_media_g2tt",
-        "USER": "social_media_g2tt_user",
-        "PASSWORD": "hG0Vu5GQ7gN9jf9qxQkGEfdm63DOQDwE",
-        "HOST": "dpg-d2le0d75r7bs73djm17g-a.oregon-postgres.render.com",
-        "PORT": "5432",
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
 
@@ -124,7 +126,7 @@ USE_TZ = True
 # -------------------------------------------------------------------
 # Authentication redirects
 # -------------------------------------------------------------------
-LOGIN_REDIRECT_URL = "posts:home" 
+LOGIN_REDIRECT_URL = "posts:home"
 LOGIN_URL = "accounts:login"
 LOGOUT_REDIRECT_URL = "posts:post_list"
 
@@ -132,7 +134,7 @@ LOGOUT_REDIRECT_URL = "posts:post_list"
 # Static files (CSS, JS)
 # -------------------------------------------------------------------
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -140,7 +142,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Media (user uploads, profile pictures)
 # -------------------------------------------------------------------
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
 
 # -------------------------------------------------------------------
 # Default primary key
