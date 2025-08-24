@@ -47,8 +47,10 @@ INSTALLED_APPS = [
     "accounts",
     "posts",
     "notifications",
+    "cloudinary",
+    "cloudinary_storage",
 ]
-
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
